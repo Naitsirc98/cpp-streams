@@ -155,6 +155,18 @@ namespace stream
 			}
 		}
 
+		size_t count()
+		{
+			size_t count;
+
+			for(count = 0;hasRemaining();++count)
+			{
+				next();
+			}
+
+			return count;
+		}
+
 
 	protected:
 

@@ -21,9 +21,12 @@ int main()
 {
 	std::vector<int> vector = createVector<int>(1, 100);
 
-	stream::of(vector)
+	auto count = stream::of(vector)
 		.filter([&](int i) -> bool {return i % 2 == 0;})
-		.forEach([&](int i) -> void {std::cout << i << '\n';});
+		.count();
+		// .forEach([&](int i) -> void {std::cout << i << '\n';});
+
+	std::cout << count << '\n';
 
 	std::cin.get();
 
