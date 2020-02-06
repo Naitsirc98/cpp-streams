@@ -183,6 +183,15 @@ namespace stream
 			return count;
 		}
 
+		Optional<T> findFirst()
+		{
+			if(hasRemaining())
+			{
+				return next();
+			}
+			return {};
+		}
+
 		void forEach(Consumer<T> consumer)
 		{
 			while(hasRemaining())
