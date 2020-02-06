@@ -244,6 +244,22 @@ namespace stream
 			return reduceInternal(identity, accumulator);
 		}
 
+		template<typename R = T>
+		R average(R identity = R())
+		{
+			// Note that T must override operators + and /
+			R result = identity;
+			size_t count = 0;
+
+			while(hasRemaining())
+			{
+				result += (R) next();
+				++count;
+			}
+
+			return count == 0 ? identity : result / count;
+		}
+
 	protected:
 
 		virtual bool hasRemaining() = 0;

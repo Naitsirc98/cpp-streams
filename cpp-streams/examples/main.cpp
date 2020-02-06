@@ -33,7 +33,7 @@ int main()
 
 	auto result = stream::of(vector)
 		.filter([&](int i) -> bool {return i % 2 == 0;})
-		.reduce(sum).value();
+		.average();
 		// .forEach([&](int i) -> void {std::cout << i << '\n';});
 
 	std::cout << result << '\n';
