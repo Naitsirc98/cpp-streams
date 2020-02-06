@@ -28,7 +28,7 @@ int main()
 
 	auto first = stream::of(vector)
 		.filter([&](int i) -> bool {return i % 2 == 0;})
-		.findFirst().value();
+		.max([&](int a, int b) -> int {return a > b ? 1 : a == b ? 0 : -1;}).value();
 		// .forEach([&](int i) -> void {std::cout << i << '\n';});
 
 	std::cout << first << '\n';

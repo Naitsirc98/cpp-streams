@@ -14,11 +14,20 @@ namespace stream
 	template<typename T, typename R>
 	using Function = std::function<R(T)>;
 
+	template<typename T1, typename T2, typename R>
+	using BiFunction = std::function<R(T1, T2)>;
+
 	template<typename T>
 	using Predicate = Function<T, bool>;
 
 	template<typename T>
 	using Consumer = Function<T, void>;
+
+	template<typename T1, typename T2>
+	using BiPredicate = BiFunction<T1, T2, bool>;
+
+	template<typename T>
+	using Comparator = BiFunction<T, T, signed>;
 
 // ===============================================================================================================================
 
@@ -200,6 +209,16 @@ namespace stream
 			}
 		}
 
+		Optional<T> max(Comparator<T> comparator)
+		{
+			return maxMinInternal([&](T next, T old) -> bool {return comparator(next, old) > 0;});
+		}
+
+		Optional<T> min(Comparator<T> comparator)
+		{
+			return maxMinInternal([&](T next, T old) -> bool {return comparator(next, old) < 0;});
+		}
+
 		bool noneMatch(Predicate<T> condition)
 		{
 			while(hasRemaining())
@@ -218,6 +237,32 @@ namespace stream
 		virtual bool hasRemaining() = 0;
 		
 		virtual T next() = 0;
+
+	private:
+
+		Optional<T> maxMinInternal(BiPredicate<T, T> comparator)
+		{
+			Optional<T> result;
+
+			while(hasRemaining())
+			{
+				if(result.has_value())
+				{
+					T next_element = next();
+					if(comparator(next_element, result.value()))
+					{
+						result = next_element;
+					}
+				}
+				else
+				{
+					result = next();
+				}
+			}
+
+			return std::move(result);
+		}
+
 	};
 
 // ===============================================================================================================================
