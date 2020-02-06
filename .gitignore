@@ -3,3 +3,5 @@
 *.vcxproj*
 /Debug/
 /Release/
+/**/Debug/
+/**/Release/
