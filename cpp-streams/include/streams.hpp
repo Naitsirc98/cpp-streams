@@ -1,41 +1,70 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 
 namespace stream
 {
 
+	template<typename T>
+	using Optional = std::optional<T>;
+
+	// ===> OPERATION TYPES <===
+
+	template<typename T, typename R>
+	using Function = std::function<R(T)>;
+
+	template<typename T>
+	using Predicate = Function<T, bool>;
+
+// ===============================================================================================================================
+
 	// ===> STREAM TYPES <===
 
 
-	/* Base class for all streams
+	/*
+		Base class for all streams
 
 		It provides a full interface for all possible operations with
 		streams. Subclasses of this class must implement its pipeline stage
 	
 		==> T: the type of the elements of this stream
-		==> Self: type of this stream object
+		==> Self: type of this stream object. This will serve as the source for the next stream in the pipeline
 	*/
 	template<typename T, typename Self>
 	class Stream;
 
 
 
-	/* Stream that supplies elements from a collection of data. Elements
+	/*
+		Stream that supplies elements from a collection of data. Elements
 		provided by this type of stream are not modified
 	
 		==> T: the type of the elements of this stream
 		==> Iterator: the iterator type of the data container
 
 	*/
-	template<class T, class Iterator>
+	template<typename T, typename Iterator>
 	class SourceStream;
+
+	
+	/*
+		Stream for filtering operations
+
+		It takes an element from the previous stream and evaluates it.
+		If the condition is true, the element will advance through the pipeline
+		to the next stream. If the condition is returns false, the element is discarded.
+	
+	*/
+	template<typename T, typename PreviousStream>
+	class FilterStream;
 
 
 #define _STREAM_FRIEND_TYPES_ \
 	template<class _T, class _Iterator> friend class SourceStream;\
+	template<class _T, class _PreviousStream> friend class FilterStream;\
 
-
+// ===============================================================================================================================
 
 	// ===> UTILITY FUNCTIONS <===
 
@@ -93,11 +122,10 @@ namespace stream
 	}
 
 
-	// =======================================================================================
+// ===============================================================================================================================
 
 
-
-	// ===> IMPLEMENTATION <===
+	// ===> IMPLEMENTATIONS <===
 
 	template<typename T, typename Self>
 	class Stream
@@ -108,7 +136,10 @@ namespace stream
 
 		virtual ~Stream() {}
 
-		
+		FilterStream<T, Self> filter(Predicate<T> condition)
+		{
+			return FilterStream<T, Self>(static_cast<Self*>(this), condition);
+		}
 
 	protected:
 
@@ -117,6 +148,7 @@ namespace stream
 		virtual T next() = 0;
 	};
 
+// ===============================================================================================================================
 
 	template<typename T, typename Iterator>
 	class SourceStream : public Stream<T, SourceStream<T, Iterator>>
@@ -147,6 +179,51 @@ namespace stream
 	private:
 		Iterator m_Current;
 		const Iterator m_End;
+	};
+
+
+// ===============================================================================================================================
+
+	template<typename T, typename PreviousStream>
+	class FilterStream : Stream<T, FilterStream<T, PreviousStream>>
+	{
+		_STREAM_FRIEND_TYPES_
+	public:
+
+		FilterStream(PreviousStream* previous, Predicate<T> condition)
+			: m_Previous(*previous), m_Condition(condition)
+		{
+
+		}
+
+	protected:
+		
+		bool hasRemaining() override
+		{
+			m_Next.reset();
+
+			while(m_Previous.hasRemaining())
+			{
+				m_Next = m_Previous.next();
+
+				if(m_Condition(m_Next.value()))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		T next() override
+		{
+			return m_Next.value();
+		}
+
+	private:
+		PreviousStream m_Previous;
+		Predicate<T> m_Condition;
+		Optional<T> m_Next;
 	};
 
 }
