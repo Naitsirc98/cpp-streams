@@ -22,16 +22,21 @@ bool greater_than_zero(int i)
 	return i > 0;
 }
 
+int sum(int a, int b)
+{
+	return a + b;
+}
+
 int main()
 {
 	std::vector<int> vector = createVector<int>(1, 100);
 
-	auto first = stream::of(vector)
+	auto result = stream::of(vector)
 		.filter([&](int i) -> bool {return i % 2 == 0;})
-		.max([&](int a, int b) -> int {return a > b ? 1 : a == b ? 0 : -1;}).value();
+		.reduce(sum).value();
 		// .forEach([&](int i) -> void {std::cout << i << '\n';});
 
-	std::cout << first << '\n';
+	std::cout << result << '\n';
 
 	std::cin.get();
 

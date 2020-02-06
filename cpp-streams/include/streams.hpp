@@ -29,6 +29,9 @@ namespace stream
 	template<typename T>
 	using Comparator = BiFunction<T, T, signed>;
 
+	template<typename T>
+	using Accumulator = BiFunction<T, T, T>;
+
 // ===============================================================================================================================
 
 	// ===> STREAM TYPES <===
@@ -231,6 +234,15 @@ namespace stream
 			return true;
 		}
 
+		Optional<T> reduce(Accumulator<T> accumulator)
+		{
+			return reduceInternal({}, accumulator);
+		}
+
+		Optional<T> reduce(const T& identity, Accumulator<T> accumulator)
+		{
+			return reduceInternal(identity, accumulator);
+		}
 
 	protected:
 
@@ -258,6 +270,16 @@ namespace stream
 				{
 					result = next();
 				}
+			}
+
+			return std::move(result);
+		}
+
+		Optional<T> reduceInternal(Optional<T> result, Accumulator<T> accumulator)
+		{
+			while(hasRemaining())
+			{
+				result = result.has_value() ? accumulator(result.value(), next()) : next();
 			}
 
 			return std::move(result);
