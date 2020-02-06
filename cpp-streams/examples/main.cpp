@@ -21,7 +21,9 @@ int main()
 {
 	std::vector<int> vector = createVector<int>(1, 100);
 
-	auto stream = stream::of(vector).filter([=](int i) -> bool {return i % 2 == 0;});
+	stream::of(vector)
+		.filter([&](int i) -> bool {return i % 2 == 0;})
+		.forEach([&](int i) -> void {std::cout << i << '\n';});
 
 	std::cin.get();
 

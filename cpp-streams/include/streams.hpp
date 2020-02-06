@@ -17,6 +17,9 @@ namespace stream
 	template<typename T>
 	using Predicate = Function<T, bool>;
 
+	template<typename T>
+	using Consumer = Function<T, void>;
+
 // ===============================================================================================================================
 
 	// ===> STREAM TYPES <===
@@ -131,15 +134,27 @@ namespace stream
 	class Stream
 	{
 		_STREAM_FRIEND_TYPES_
-
 	public:
 
 		virtual ~Stream() {}
+
+		// ===> Intermediate operations <===
 
 		FilterStream<T, Self> filter(Predicate<T> condition)
 		{
 			return FilterStream<T, Self>(static_cast<Self*>(this), condition);
 		}
+
+		// ===> Terminal operations <===
+
+		void forEach(Consumer<T> consumer)
+		{
+			while(hasRemaining())
+			{
+				consumer(next());
+			}
+		}
+
 
 	protected:
 
@@ -185,7 +200,7 @@ namespace stream
 // ===============================================================================================================================
 
 	template<typename T, typename PreviousStream>
-	class FilterStream : Stream<T, FilterStream<T, PreviousStream>>
+	class FilterStream : public Stream<T, FilterStream<T, PreviousStream>>
 	{
 		_STREAM_FRIEND_TYPES_
 	public:
