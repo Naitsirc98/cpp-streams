@@ -147,12 +147,28 @@ namespace stream
 
 		// ===> Terminal operations <===
 
-		void forEach(Consumer<T> consumer)
+		bool allMatch(Predicate<T> condition)
 		{
 			while(hasRemaining())
 			{
-				consumer(next());
+				if(!condition(next()))
+				{
+					return false;
+				}
 			}
+			return true;
+		}
+
+		bool anyMatch(Predicate<T> condition)
+		{
+			while(hasRemaining())
+			{
+				if(condition(next()))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		size_t count()
@@ -165,6 +181,26 @@ namespace stream
 			}
 
 			return count;
+		}
+
+		void forEach(Consumer<T> consumer)
+		{
+			while(hasRemaining())
+			{
+				consumer(next());
+			}
+		}
+
+		bool noneMatch(Predicate<T> condition)
+		{
+			while(hasRemaining())
+			{
+				if(condition(next()))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 
