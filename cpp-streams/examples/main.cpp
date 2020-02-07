@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <unordered_map>
+#include <map>
 
 template<typename T>
 std::vector<T> createVector(T initial, T limit, T step = 1, size_t repeatCount = 1)
@@ -76,13 +77,14 @@ void printMap(const Container& container)
 int main()
 {
 
-	std::vector<int> vector = createVector<int>(1, 100, 1, 5);
+	std::vector<int> vector = createVector<int>(1, 10);
 
 	auto map = stream::of(vector)
 		.filter([&](int i) -> bool {return i % 2 == 0;})
-		.limit<10>()
+		.skip<1>()
+		// .limit<2>()
 		//.collect<std::set<int>>();
-		.collect(MapCollector<int>());
+		.collect(MapCollector<int, std::map<size_t, int>>());
 
 	printMap(map);
 
