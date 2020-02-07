@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <optional>
-#include <vector>
+
 
 namespace stream
 {
@@ -77,9 +77,21 @@ namespace stream
 	class FilterStream;
 
 
+	/*
+		Stream for limiting operations
+
+		Consists of the elements in the previous stream truncated to be
+		no longer than MaxSize in length
+
+	*/
+	template<typename T, size_t MaxSize, typename PreviousStream>
+	class LimitStream;
+
+
 #define _STREAM_FRIEND_TYPES_ \
 	template<class _T, class _Iterator> friend class SourceStream;\
 	template<class _T, class _PreviousStream> friend class FilterStream;\
+	template<class _T, size_t _MaxSize, class _PreviousStream> friend class LimitStream;\
 
 // ===============================================================================================================================
 
@@ -157,6 +169,12 @@ namespace stream
 		FilterStream<T, Self> filter(Predicate<T> condition)
 		{
 			return FilterStream<T, Self>(static_cast<Self*>(this), condition);
+		}
+
+		template<size_t MaxSize>
+		LimitStream<T, MaxSize, Self> limit()
+		{
+			return LimitStream<T, MaxSize, Self>(static_cast<Self*>(this));
 		}
 
 		// ===> Terminal operations <===
@@ -410,6 +428,37 @@ namespace stream
 		PreviousStream m_Previous;
 		Predicate<T> m_Condition;
 		Optional<T> m_Next;
+	};
+
+
+	template<typename T, size_t MaxSize, typename PreviousStream>
+	class LimitStream : public Stream<T, LimitStream<T, MaxSize, PreviousStream>>
+	{
+		_STREAM_FRIEND_TYPES_
+	public:
+
+		LimitStream(PreviousStream* previous)
+			: m_Previous(*previous)
+		{
+
+		}
+
+	protected:
+
+		bool hasRemaining() override
+		{
+			return m_Previous.hasRemaining() && m_Count < MaxSize;
+		}
+
+		T next() override
+		{
+			++m_Count;
+			return m_Previous.next();
+		}
+
+	private:
+		PreviousStream m_Previous;
+		size_t m_Count = 0;
 	};
 
 }
