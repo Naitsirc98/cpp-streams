@@ -277,9 +277,19 @@ namespace stream
 			}
 		}
 
+		Optional<T> max()
+		{
+			return minMaxInternal([&](T next, T old) -> bool {return next > old;});
+		}
+
 		Optional<T> max(Comparator<T> comparator)
 		{
 			return maxMinInternal([&](T next, T old) -> bool {return comparator(next, old) > 0;});
+		}
+
+		Optional<T> min()
+		{
+			return minMaxInternal([&](T next, T old) -> bool {return next < old;});
 		}
 
 		Optional<T> min(Comparator<T> comparator)

@@ -82,9 +82,10 @@ int main()
 	auto map = stream::of(vector)
 		.filter([&](int i) -> bool {return i % 2 == 0;})
 		.skip<1>()
+		.min();
 		// .limit<2>()
 		//.collect<std::set<int>>();
-		.collect(MapCollector<int, std::map<size_t, int>>());
+		// .collect(MapCollector<int, std::map<size_t, int>>());
 
 	printMap(map);
 
