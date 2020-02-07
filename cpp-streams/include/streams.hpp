@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace stream
 {
@@ -33,6 +34,7 @@ namespace stream
 	using Accumulator = BiFunction<T, T, T>;
 
 // ===============================================================================================================================
+
 
 	// ===> STREAM TYPES <===
 
@@ -181,6 +183,35 @@ namespace stream
 				}
 			}
 			return false;
+		}
+
+		template<typename Container>
+		Container collect()
+		{
+			Container container;
+			return std::move(collect(container));
+		}
+
+		template<typename Container>
+		Container& collect(Container& container)
+		{
+			while(hasRemaining())
+			{
+				container.insert(std::end(container), next());
+			}
+
+			return container;
+		}
+
+		template<typename Collector, typename Container = typename Collector::ContainerType>
+		Container collect(Collector collector)
+		{
+			while(hasRemaining())
+			{
+				collector.insert(next());
+			}
+
+			return *collector;
 		}
 
 		size_t count()
