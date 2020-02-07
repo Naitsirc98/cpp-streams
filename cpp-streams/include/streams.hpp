@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <optional>
+#include <unordered_set>
 
 
 namespace stream
@@ -88,7 +89,7 @@ namespace stream
 	class LimitStream;
 
 	/*
-	Stream for limiting operations
+	Stream for skipping operations
 
 	Skips the first N elements in the stream
 
@@ -96,12 +97,22 @@ namespace stream
 	template<typename T, size_t N, typename PreviousStream>
 	class SkipStream;
 
+	/*
+		Stream for limiting operations
+
+		Skips the first N elements in the stream
+
+	*/
+	template<typename T, typename PreviousStream>
+	class DistinctStream;
+
 
 #define _STREAM_FRIEND_TYPES_ \
 	template<class _T, class _Iterator> friend class SourceStream;\
 	template<class _T, class _PreviousStream> friend class FilterStream;\
 	template<class _T, size_t _MaxSize, class _PreviousStream> friend class LimitStream;\
 	template<class _T, size_t _N, class _PreviousStream> friend class SkipStream;\
+	template<class _T, class _PreviousStream> friend class DistinctStream;\
 
 // ===============================================================================================================================
 
@@ -175,6 +186,11 @@ namespace stream
 		virtual ~Stream() {}
 
 		// ===> Intermediate operations <===
+
+		DistinctStream<T, Self> distinct()
+		{
+			return DistinctStream<T, Self>(static_cast<Self*>(this));
+		}
 
 		FilterStream<T, Self> filter(Predicate<T> condition)
 		{
@@ -525,5 +541,48 @@ namespace stream
 	private:
 		PreviousStream m_Previous;
 		size_t m_Count = 0;
+	};
+
+// ===============================================================================================================================
+
+	template<typename T, typename PreviousStream>
+	class DistinctStream : public Stream<T, DistinctStream<T, PreviousStream>>
+	{
+		_STREAM_FRIEND_TYPES_
+	public:
+
+		DistinctStream(PreviousStream* previous)
+			: m_Previous(*previous)
+		{
+
+		}
+
+	protected:
+
+		bool hasRemaining() override
+		{
+			while(m_Previous.hasRemaining())
+			{
+				T nextElement = m_Previous.next();
+				if(m_Set.insert(nextElement).second)
+				{
+					m_Next = nextElement;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		T next() override
+		{
+			return m_Next.value();
+		}
+
+
+	private:
+		PreviousStream m_Previous;
+		std::unordered_set<T> m_Set;
+		Optional<T> m_Next;
 	};
 }
