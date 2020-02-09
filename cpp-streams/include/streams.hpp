@@ -106,6 +106,16 @@ namespace stream
 	template<typename T, typename PreviousStream>
 	class DistinctStream;
 
+	/*
+	
+		Stream for mapping operations
+
+		Maps each incoming element into another
+	
+	*/
+	template<typename T, typename R, typename PreviuosStream>
+	class MapStream;
+
 
 #define _STREAM_FRIEND_TYPES_ \
 	template<class _T, class _Iterator> friend class SourceStream;\
@@ -113,6 +123,7 @@ namespace stream
 	template<class _T, size_t _MaxSize, class _PreviousStream> friend class LimitStream;\
 	template<class _T, size_t _N, class _PreviousStream> friend class SkipStream;\
 	template<class _T, class _PreviousStream> friend class DistinctStream;\
+	template<class _T, class _R, class _PreviousStream> friend class MapStream;\
 
 // ===============================================================================================================================
 
@@ -171,6 +182,8 @@ namespace stream
 		return SourceStream<T, Iterator>(std::move(begin), std::move(end));
 	}
 
+	
+
 
 // ===============================================================================================================================
 
@@ -201,6 +214,12 @@ namespace stream
 		LimitStream<T, MaxSize, Self> limit()
 		{
 			return LimitStream<T, MaxSize, Self>(static_cast<Self*>(this));
+		}
+
+		template<typename R>
+		MapStream<T, R, Self> map(Function<T, R> mapFunction)
+		{
+			return MapStream<T, R, Self>(static_cast<Self*>(this), mapFunction);
 		}
 
 		template<size_t N>
@@ -584,5 +603,37 @@ namespace stream
 		PreviousStream m_Previous;
 		std::unordered_set<T> m_Set;
 		Optional<T> m_Next;
+	};
+
+// ===============================================================================================================================
+
+	template<typename T, typename R, typename PreviousStream>
+	class MapStream : public Stream<R, MapStream<T, R, PreviousStream>>
+	{
+		_STREAM_FRIEND_TYPES_
+	public:
+
+		MapStream(PreviousStream* previous, Function<T, R> mapFunction)
+			: m_Previous(*previous), m_MapFunction(mapFunction)
+		{
+
+		}
+
+	protected:
+
+		bool hasRemaining() override
+		{
+			return m_Previous.hasRemaining();
+		}
+
+		R next() override
+		{
+			return m_MapFunction(m_Previous.next());
+		}
+
+
+	private:
+		PreviousStream m_Previous;
+		Function<T, R> m_MapFunction;
 	};
 }

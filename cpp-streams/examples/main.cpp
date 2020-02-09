@@ -4,6 +4,8 @@
 #include <set>
 #include <unordered_map>
 #include <map>
+#include <string>
+#include <list>
 
 template<typename T>
 std::vector<T> createVector(T initial, T limit, T step = 1, size_t repeatCount = 1)
@@ -23,14 +25,29 @@ std::vector<T> createVector(T initial, T limit, T step = 1, size_t repeatCount =
 	return std::move(vec);
 }
 
-bool greater_than_zero(int i)
+bool greaterThanZero(int i)
 {
 	return i > 0;
+}
+
+bool isEvenNumber(int i)
+{
+	return i % 2 == 0;
 }
 
 int sum(int a, int b)
 {
 	return a + b;
+}
+
+std::string toString(int i)
+{
+	return "Number = " + std::to_string(i);
+}
+
+float toFloat(int i)
+{
+	return 0.0f;
 }
 
 template<typename T, typename Container = std::unordered_map<size_t, T>>
@@ -77,16 +94,17 @@ void printMap(const Container& container)
 int main()
 {
 
-	std::vector<int> vector = createVector<int>(1, 10, 1, 10);
+	std::vector<int> vector = createVector<int>(1, 50, 1, 5);
 
-	auto map = stream::of(vector)
-		.filter([&](int i) -> bool {return i % 2 == 0;})
+	using StrVector = std::vector<std::string>;
+
+	auto result = stream::of(vector)
+		.filter(isEvenNumber)
 		.distinct()
-		// .limit<2>()
-		//.collect<std::set<int>>();
-		.collect(MapCollector<int, std::map<size_t, int>>());
+		.map<std::string>(toString)
+		.collect<StrVector>();
 
-	printMap(map);
+	print(result);
 
 	std::cin.get();
 
